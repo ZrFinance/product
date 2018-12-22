@@ -1,19 +1,35 @@
 <template>
   <div class="notice">
-    <router-link class="p" to="/notice">系统通知: 通知 ! ! ! ..</router-link>
+    <router-link class="p" to="/notice">{{this.createtime}} {{this.title}}:{{this.content}} </router-link>
   </div>
 </template>
 
+
 <script>
+import { getNotice } from '@/api/request/request'
+import { timestampToTime } from '@/api/utils'
 export default {
   name: 'HomeNotice',
   data () {
     return {
+      createtime:'',
+      title:''
     }
   },
   methods: {
+    meth_getNotice: function () {
+      getNotice(this.callbackGetNotice)
+    },
+    callbackGetNotice: function (res) {
+      if (res.data.data){
+        this.title = res.data.data.title
+        this.content = res.data.data.content
+        this.createtime = timestampToTime(res.data.data.createtime)   
+      }
+    } 
   },
   mounted () {
+    this.meth_getNotice()
   }
 }
 </script>

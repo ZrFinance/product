@@ -140,10 +140,9 @@ export default {
   },
   mounted () {
       localStorage.authorization=''
-      localStorage.username=''
       this.handleAuthorization('')
-      this.handleUser({username:''})
       this.$router.push('/')
+      this.mobile=localStorage.username
   }
 }
 </script>
