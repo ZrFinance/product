@@ -1,8 +1,39 @@
 <template>
   <section>
 
-    <el-col :span="6" class="toolbar" style="padding-bottom: 0px;">
-      <el-date-picker type="date" format="yyyy 年 MM 月 dd 日" placeholder="选择日期" v-model="value2" style="width: 100%;" :picker-options="pickerOptions1" ></el-date-picker>
+    <el-col :span="24" class="toolbar" style="padding-bottom: 0px;">
+      <el-form :inline="true" :model="filters">
+
+        <el-form-item >
+          <el-date-picker type="date" format="yyyy 年 MM 月 dd 日" placeholder="选择提供帮助日期" v-model="value2" style="width: 100%;" :picker-options="pickerOptions1" ></el-date-picker>
+        </el-form-item>
+
+        <el-form-item >
+          <el-date-picker
+              v-model="value3"
+              type="daterange"
+              align="right"
+              unlink-panels
+              placeholder="选择用户注册日期范围"
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              :picker-options="pickerOptions2">
+            </el-date-picker>
+        </el-form-item>
+        <el-form-item>
+          <el-radio-group v-model="day">
+            <el-radio-button label="1">五日及以上</el-radio-button>
+            <el-radio-button label="0">不限</el-radio-button>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item>
+          <el-radio-group v-model="matchauth">
+            <el-radio-button label="0">白名单</el-radio-button>
+            <el-radio-button label="1">黑名单</el-radio-button>
+          </el-radio-group>
+        </el-form-item>
+      </el-form>
     </el-col>
 
     <!--工具条-->
@@ -29,10 +60,7 @@
           <el-input v-model="filters.amount" placeholder="提供金额"></el-input>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" v-on:click="requestHandle(false)">查询</el-button>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" v-on:click="ByDayQuery">5日及以上</el-button>
+          <el-button type="primary" v-on:click="requestHandle">查询</el-button>
         </el-form-item>
       </el-form>
     </el-col>
@@ -62,6 +90,8 @@
       <el-table-column prop="isday" label="排队天数" width="150" sortable align="center">
       </el-table-column>
       <el-table-column prop="updtime" label="提供时间" width="170" sortable align="center">
+      </el-table-column>
+      <el-table-column prop="registertime" label="注册时间" width="170" sortable align="center">
       </el-table-column>
       <el-table-column label="操作" width="200" align="center" fixed="right">
         <template slot-scope="scope">
@@ -103,6 +133,7 @@
 <script>
 import { requestTgbz,requestDelOrder,requestMatchAdd,requestOrderSplit } from '@/api/request/request';
 import { timestampToTime } from '@/api/utils'
+import { dateformart } from '@/api/utils'
 export default {
   data() {
     return {
@@ -163,7 +194,39 @@ export default {
           }
         }]
       },
-      value2:''
+      value2:'',
+      pickerOptions2: {
+        shortcuts: [{
+          text: '最近一周',
+          onClick(picker) {
+            const end = new Date();
+            const start = new Date();
+            start.setTime(start.getTime() - 3600 * 1000 * 24 * 7);
+            picker.$emit('pick', [start, end]);
+          }
+        }, {
+          text: '最近一个月',
+          onClick(picker) {
+            const end = new Date();
+            const start = new Date();
+            start.setTime(start.getTime() - 3600 * 1000 * 24 * 30);
+            picker.$emit('pick', [start, end]);
+          }
+        }, {
+          text: '最近三个月',
+          onClick(picker) {
+            const end = new Date();
+            const start = new Date();
+            start.setTime(start.getTime() - 3600 * 1000 * 24 * 90);
+            picker.$emit('pick', [start, end]);
+          }
+        }]
+      },
+      value3: '',
+      startdate:'',
+      enddate:'',
+      day:'0',
+      matchauth:'0'
     }
   },
   methods: {
@@ -220,6 +283,7 @@ export default {
       this.orderlist = res.data.data
       for ( var item in this.orderlist) {
         this.$set(this.orderlist[item],'updtime',timestampToTime(this.orderlist[item].updtime))
+        this.$set(this.orderlist[item],'registertime',timestampToTime(this.orderlist[item].registertime))
         this.$set(this.orderlist[item],'isday','已排' + this.orderlist[item].isday + '天')
       }
       this.total = Number(res.headers.total)
@@ -245,9 +309,6 @@ export default {
     HandleSelectChange(){
       this.requestHandle()
     },
-    ByDayQuery(){
-      this.requestHandle(true)
-    },
     indexMethod(ordercode){
       return ordercode
     },
@@ -257,12 +318,23 @@ export default {
       }
       console.log(this.value2)
       this.listLoading=true
-      if(day){
-        day=1
-      }else{
-        day=''
+      if(this.value3[0] && this.value3[1]){
+        this.startdate=dateformart(this.value3[0])+' 00:00:01'
+        this.enddate=dateformart(this.value3[1])+' 23:59:59'      
       }
-      requestTgbz({value2:this.value2,page:this.page,flag:this.value,mobile:this.filters.mobile,ordercode:this.filters.ordercode,day:day,amount:this.filters.amount},this.callBackrequestTgbz)
+      console.log(this.startdate)
+      console.log(this.enddate)
+      requestTgbz({
+        value2:this.value2,
+        page:this.page,
+        flag:this.value,
+        mobile:this.filters.mobile,
+        ordercode:this.filters.ordercode,
+        day:this.day,
+        amount:this.filters.amount,
+        startdate:this.startdate,
+        matchauth:this.matchauth,
+        enddate:this.enddate},this.callBackrequestTgbz)
     }
   },
   mounted() {

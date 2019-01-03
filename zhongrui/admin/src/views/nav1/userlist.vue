@@ -13,6 +13,12 @@
           <el-input v-model="filters.referee_name" placeholder="推荐人"></el-input>
         </el-form-item>
         <el-form-item>
+          <el-radio-group v-model="filters.matchauth">
+            <el-radio-button label="0">白名单</el-radio-button>
+            <el-radio-button label="1">黑名单</el-radio-button>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item>
           <el-button type="primary" v-on:click="requestHandle">查询</el-button>
         </el-form-item>
       </el-form>
@@ -29,7 +35,7 @@
       max-height="500">
       <el-table-column type="selection" width="55">
       </el-table-column>
-      <el-table-column type="index" width="40">
+      <el-table-column type="index" width="60">
       </el-table-column>
       <el-table-column prop="userid" label="编号" width="88" sortable align="center">   
       </el-table-column>   
@@ -42,6 +48,8 @@
       <el-table-column prop="referee_name" label="推荐人" width="125" sortable align="center">
       </el-table-column>
       <el-table-column prop="statusname" label="状态" width="88" sortable align="center">
+      </el-table-column>
+      <el-table-column prop="matchauthname" label="匹配权限" width="125" sortable align="center">
       </el-table-column>
       <el-table-column prop="spread" label="推广股权" width="125" sortable align="center">
       </el-table-column>
@@ -110,6 +118,12 @@
             <el-radio class="radio" label="0">正常</el-radio>
             <el-radio class="radio" label="1">未激活</el-radio>
             <el-radio class="radio" label="2">禁用</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="匹配权限" prop="matchauth">
+          <el-radio-group v-model="editForm.matchauth">
+            <el-radio class="radio" label="0">白名单</el-radio>
+            <el-radio class="radio" label="1">黑名单</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="密码" prop="passwd">
@@ -203,7 +217,8 @@ export default {
       filters: {
         username: '',
         name: '',
-        referee_name:''
+        referee_name:'',
+        matchauth:'0'
       },
       userlist: [],
       listLoading: false,
@@ -237,6 +252,9 @@ export default {
           { required: true, message: '请输入推荐人', trigger: 'blur' }
         ],
         status: [
+          { required: true, message: '请选择状态', trigger: 'blur' }
+        ],
+        matchauth: [
           { required: true, message: '请选择状态', trigger: 'blur' }
         ],
         rcqlimit: [
@@ -329,6 +347,7 @@ export default {
             this.$set(this.editForm1,'userid',this.editForm.userid)
             this.$set(this.editForm1,'rcqlimit',this.editForm.rcqlimit)
             this.$set(this.editForm1,'referee_name',this.editForm.referee_name)
+            this.$set(this.editForm1,'matchauth',this.editForm.matchauth)
             if ( this.editForm.passwd ){
               this.$set(this.editForm1,'passwd',this.$md5(this.editForm.passwd))            
             }
@@ -362,7 +381,12 @@ export default {
     },
     requestHandle(){
       this.listLoading=true
-      requestUserQuery({page:this.page,name:this.filters.name,username:this.filters.username,referee_name:this.filters.referee_name},this.callBackrequestUserQuery)
+      requestUserQuery({
+        page:this.page,
+        name:this.filters.name,
+        username:this.filters.username,
+        referee_name:this.filters.referee_name,
+        matchauth:this.filters.matchauth},this.callBackrequestUserQuery)
     }
   },
   mounted() {
