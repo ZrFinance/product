@@ -31,6 +31,7 @@
           <el-radio-group v-model="matchauth">
             <el-radio-button label="0">白名单</el-radio-button>
             <el-radio-button label="1">黑名单</el-radio-button>
+            <el-radio-button label="2">红名单</el-radio-button>
           </el-radio-group>
         </el-form-item>
       </el-form>
@@ -70,12 +71,14 @@
       :data="orderlist" 
       highlight-current-row 
       v-loading="listLoading"
+      :show-summary="true"
+      :summary-method="getSummaries"
       @selection-change="selsChange" 
       style="width: 100%;"
       :border="true"
       :fit="true"
       max-height="500">
-      <el-table-column type="selection" width="55">
+      <el-table-column type="selection" width="60">
       </el-table-column>
       <el-table-column type="index" width="60">
       </el-table-column>
@@ -230,6 +233,34 @@ export default {
     }
   },
   methods: {
+    getSummaries(param) {
+      const { columns, data } = param;
+      const sums = [];
+      columns.forEach((column, index) => {
+        if (index === 0) {
+          sums[index] = '合计';
+          return;
+        }
+        if (index === 4 ){
+          const values = data.map(item => Number(item[column.property]));
+          if (!values.every(value => isNaN(value))) {
+            sums[index] = values.reduce((prev, curr) => {
+              const value = Number(curr);
+              if (!isNaN(value)) {
+                return prev + curr;
+              } else {
+                return prev;
+              }
+            }, 0);
+            sums[index] += ' 元';
+          } else {
+            sums[index] = '';
+          }
+        }
+      });
+
+      return sums;
+    },
     OrderSplitSubmit() {
       this.$refs.OrderSplitValue.validate((valid) => {
         if (valid) {
@@ -322,8 +353,6 @@ export default {
         this.startdate=dateformart(this.value3[0])+' 00:00:01'
         this.enddate=dateformart(this.value3[1])+' 23:59:59'      
       }
-      console.log(this.startdate)
-      console.log(this.enddate)
       requestTgbz({
         value2:this.value2,
         page:this.page,

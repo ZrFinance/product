@@ -1,6 +1,32 @@
 <template>
   <section>
 
+
+    <el-col :span="24" class="toolbar" style="padding-bottom: 0px;">
+      <el-form :inline="true" :model="filters">
+
+        <el-form-item >
+          <el-date-picker
+              v-model="filters.value3"
+              type="daterange"
+              align="right"
+              placeholder="选择用户注册日期范围"
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              :picker-options="pickerOptions2">
+            </el-date-picker>
+        </el-form-item>
+        <el-form-item>
+          <el-radio-group v-model="filters.matchauth">
+            <el-radio-button label="0">白名单</el-radio-button>
+            <el-radio-button label="1">黑名单</el-radio-button>
+            <el-radio-button label="2">红名单</el-radio-button>
+          </el-radio-group>
+        </el-form-item>
+      </el-form>
+    </el-col>
+
     <el-col :span="24" class="toolbar" style="padding-bottom: 0px;">
       <el-form :inline="true" :model="filters">
         <el-form-item >
@@ -11,12 +37,6 @@
         </el-form-item>
         <el-form-item >
           <el-input v-model="filters.referee_name" placeholder="推荐人"></el-input>
-        </el-form-item>
-        <el-form-item>
-          <el-radio-group v-model="filters.matchauth">
-            <el-radio-button label="0">白名单</el-radio-button>
-            <el-radio-button label="1">黑名单</el-radio-button>
-          </el-radio-group>
         </el-form-item>
         <el-form-item>
           <el-button type="primary" v-on:click="requestHandle">查询</el-button>
@@ -124,6 +144,7 @@
           <el-radio-group v-model="editForm.matchauth">
             <el-radio class="radio" label="0">白名单</el-radio>
             <el-radio class="radio" label="1">黑名单</el-radio>
+            <el-radio class="radio" label="2">红名单</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="密码" prop="passwd">
@@ -209,6 +230,7 @@
 <script>
 import { requestUserQuery,requestUserUpd,requestAmountSend } from '@/api/request/request';
 import { timestampToTime } from '@/api/utils'
+import { dateformart } from '@/api/utils'
 const config = require('../../../config')
 var server_url = config.dev.proxyTable[Object.keys(config.dev.proxyTable)[0]].target
 export default {
@@ -218,8 +240,38 @@ export default {
         username: '',
         name: '',
         referee_name:'',
-        matchauth:'0'
+        matchauth:'0',
+        value3:''
       },
+      pickerOptions2: {
+        shortcuts: [{
+          text: '最近一周',
+          onClick(picker) {
+            const end = new Date();
+            const start = new Date();
+            start.setTime(start.getTime() - 3600 * 1000 * 24 * 7);
+            picker.$emit('pick', [start, end]);
+          }
+        }, {
+          text: '最近一个月',
+          onClick(picker) {
+            const end = new Date();
+            const start = new Date();
+            start.setTime(start.getTime() - 3600 * 1000 * 24 * 30);
+            picker.$emit('pick', [start, end]);
+          }
+        }, {
+          text: '最近三个月',
+          onClick(picker) {
+            const end = new Date();
+            const start = new Date();
+            start.setTime(start.getTime() - 3600 * 1000 * 24 * 90);
+            picker.$emit('pick', [start, end]);
+          }
+        }]
+      },
+      startdate:'',
+      enddate:'',
       userlist: [],
       listLoading: false,
       total:0,
@@ -381,12 +433,18 @@ export default {
     },
     requestHandle(){
       this.listLoading=true
+      if(this.filters.value3[0] && this.filters.value3[1]){
+        this.startdate=dateformart(this.filters.value3[0])+' 00:00:01'
+        this.enddate=dateformart(this.filters.value3[1])+' 23:59:59'      
+      }
       requestUserQuery({
         page:this.page,
         name:this.filters.name,
         username:this.filters.username,
         referee_name:this.filters.referee_name,
-        matchauth:this.filters.matchauth},this.callBackrequestUserQuery)
+        matchauth:this.filters.matchauth,
+        startdate:this.startdate,
+        enddate:this.enddate},this.callBackrequestUserQuery)
     }
   },
   mounted() {

@@ -1,6 +1,11 @@
 <template>
   <section>
     <h3 :style="{color:'red'}">提供帮助列表:</h3>
+
+    <el-col :span="24" class="toolbar">
+      <el-button type="success" @click="Link">匹配</el-button>
+    </el-col>
+
     <!--列表-->
     <el-table 
       :data="orderlist" 
@@ -11,7 +16,10 @@
       :fit="true"
       :show-summary="true"
       :summary-method="getSummaries"
+      @selection-change="selsChange"
       max-height="500">
+      <el-table-column type="selection" width="60">
+      </el-table-column>
       <el-table-column type="index" width="80">
       </el-table-column>
       <el-table-column prop="ordercode" label="编号" width="100" sortable align="center">   
@@ -22,12 +30,10 @@
       </el-table-column>
       <el-table-column prop="isday" label="排单天数" width="200" sortable align="center">
       </el-table-column>
-      <el-table-column label="操作" width="150" align="center">
-        <template slot-scope="scope">
-          <el-button type="danger" size="small" @click="handleDel( scope.row)">删除</el-button>
-        </template>
-      </el-table-column>
     </el-table>
+    <el-col :span="24" class="toolbar">
+    <el-button type="danger" @click="handleDel" :disabled="this.sels.length===0">删除</el-button>
+    </el-col>
 
 
 
@@ -39,10 +45,13 @@
       v-loading="listLoading1" 
       style="width: 100%;"
       :border="true"
+      @selection-change="selsChange"
       :fit="true"
       :show-summary="true"
       :summary-method="getSummaries"
       max-height="500">
+      <el-table-column type="selection" width="60">
+      </el-table-column>
       <el-table-column type="index" width="80">
       </el-table-column>
       <el-table-column prop="ordercode" label="编号" width="100" sortable align="center">   
@@ -53,14 +62,9 @@
       </el-table-column>
       <el-table-column prop="isday" label="排单天数" width="200" sortable align="center">
       </el-table-column>
-      <el-table-column label="操作" width="150" align="center">
-        <template slot-scope="scope">
-          <el-button type="danger" size="small" @click="handleDel( scope.row)">删除</el-button>
-        </template>
-      </el-table-column>
     </el-table>
     <el-col :span="24" class="toolbar">
-      <el-button type="success" @click="Link">匹配</el-button>
+      <el-button type="danger" @click="handleDel" :disabled="this.sels.length===0">删除</el-button>
     </el-col>
   </section>
 </template>
@@ -77,10 +81,14 @@ import { timestampToTime } from '@/api/utils'
         listLoading: false,
         listLoading1: false,
         orderlist:[],
-        orderlist1:[]
+        orderlist1:[],
+        sels: []
       }
     },
     methods: {
+      selsChange(sels) {
+          this.sels = sels;
+      },
       callBackrequestMatchQuery(res){
         this.orderlist = res.data.data
         for ( var item in this.orderlist) {
@@ -103,7 +111,7 @@ import { timestampToTime } from '@/api/utils'
             sums[index] = '合计';
             return;
           }
-          if (index === 3 ){
+          if (index === 4 ){
             const values = data.map(item => Number(item[column.property]));
             if (!values.every(value => isNaN(value))) {
               sums[index] = values.reduce((prev, curr) => {
@@ -130,13 +138,14 @@ import { timestampToTime } from '@/api/utils'
       callBackhandleDelError(res){
         this.listLoading = false;
       },
-      handleDel(row){
-        this.$confirm('确认删除该记录吗?', '提示', {
+      handleDel(){
+        this.$confirm('确认删除记录吗?', '提示', {
             type: 'warning'
         }).then(() => {
           this.listLoading = true;
+          var ordercodes = this.sels.map(item => item.ordercode).toString();
           requestMatchDel(
-            {ordercode:row.ordercode},
+            {ordercode:ordercodes},
             this.callBackhandleDel,this.callBackhandleDelError)
         }).catch(() => {
         });
