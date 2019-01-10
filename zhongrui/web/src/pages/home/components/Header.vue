@@ -22,11 +22,7 @@ export default {
       imgs: [
         {
           id : 1,
-          url: require("@/assets/img/banner1.jpg"),
-        },
-        {
-          id : 2,
-          url: require("@/assets/img/banner2.jpg")
+          url: require("@/assets/img/banner3.jpg"),
         }
       ]
     }
